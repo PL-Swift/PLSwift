@@ -8,7 +8,6 @@
 ![Swift4](https://img.shields.io/badge/swift-4-blue.svg)
 ![macOS](https://img.shields.io/badge/os-macOS-green.svg?style=flat)
 ![tuxOS](https://img.shields.io/badge/os-tuxOS-green.svg?style=flat)
-![Travis](https://travis-ci.org/modswift/mod_swift.svg?branch=develop)
 
 A Swift API for PostgreSQL Server Extensions.
 This wraps the CPLSwift system package and
