@@ -8,10 +8,10 @@
 
 import CPLSwift
 
-extension FunctionCallInfoData {
+public extension FunctionCallInfoData {
   
   /// Access PostgreSQL function call arguments as a Datum
-  subscript(datum idx: Int) -> Datum? {
+  public subscript(datum idx: Int) -> Datum? {
     // convert tuple to index
     switch idx {
       case 0: return arg.0
@@ -27,7 +27,7 @@ extension FunctionCallInfoData {
   }
   
   /// Access PostgreSQL function call arguments as an Int
-  subscript(int idx: Int) -> Int {
+  public subscript(int idx: Int) -> Int {
     guard let datum = self[datum: idx] else { return -42 }
     return datum.intValue
   }

@@ -11,7 +11,7 @@ import CPLSwift
 
 // MARK: - PG_MAGIC_BLOCK
 
-let PG_MAGIC_FUNCTION_NAME_STRING = "Pg_magic_func"
+public let PG_MAGIC_FUNCTION_NAME_STRING = "Pg_magic_func"
 
 fileprivate var PGExtensionMagicStructValue = Pg_magic_struct(
   len          : Int32(MemoryLayout<Pg_magic_struct>.stride),
@@ -23,12 +23,12 @@ fileprivate var PGExtensionMagicStructValue = Pg_magic_struct(
   float8byval  : FLOAT8PASSBYVAL != 0 ? 1 : 0
 )
 
-let PGExtensionMagicStruct =
-      UnsafePointer(UnsafeMutablePointer(&PGExtensionMagicStructValue))
+public let PGExtensionMagicStruct =
+      UnsafeRawPointer(UnsafeMutablePointer(&PGExtensionMagicStructValue))
 
 
 // MARK: - PG_FUNCTION_INFO_V1
 
 fileprivate var PG_FUNCTION_INFO_V1_value = Pg_finfo_record(api_version: 1)
-let PG_FUNCTION_INFO_V1 =
-      UnsafePointer(UnsafeMutablePointer(&PG_FUNCTION_INFO_V1_value))
+public let PG_FUNCTION_INFO_V1 =
+      UnsafeRawPointer(UnsafeMutablePointer(&PG_FUNCTION_INFO_V1_value))

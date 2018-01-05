@@ -15,34 +15,36 @@ import CPLSwift
 #define PointerGetDatum(X)   ((Datum) (X)) // cast pointer to datum
 */
 
-func PointerGetDatum(_ ptr: UnsafeRawPointer?) -> Datum {
+public func PointerGetDatum(_ ptr: UnsafeRawPointer?) -> Datum {
   guard let ptr = ptr else { return 0 }
   return Datum(bitPattern: ptr)
 }
 
-let PG_RETURN_POINTER = PointerGetDatum
-let PG_RETURN_TEXT_P  = PG_RETURN_POINTER
+public let PG_RETURN_POINTER = PointerGetDatum
+public let PG_RETURN_TEXT_P  = PG_RETURN_POINTER
 
 
-extension Datum {
-  var int64Value : Int64 {
+public extension Datum {
+  
+  public var int64Value : Int64 {
     /*
      #define DatumGetInt32(X) ((int32) GET_4_BYTES(X))
      #define GET_4_BYTES(datum)  (((Datum) (datum)) & 0xffffffff)
      */
     return Int64(bitPattern: UInt64(self))
   }
-  var intValue : Int {
+  
+  public var intValue : Int {
     return Int(int64Value)
   }
 }
 
-protocol PGDatumRepresentable {
+public protocol PGDatumRepresentable {
   var pgDatum : Datum { get }
 }
 
 extension String : PGDatumRepresentable {
-  var pgDatum : Datum {
+  public var pgDatum : Datum {
     // UnsafeMutablePointer<text>?
     let txt = cstring_to_text(self)
     
@@ -52,15 +54,19 @@ extension String : PGDatumRepresentable {
 }
 
 extension Int64 : PGDatumRepresentable {
-  var pgDatum : Datum {
+  
+  public var pgDatum : Datum {
     if USE_FLOAT8_BYVAL != 0 { return Datum(UInt64(bitPattern: self)) }
     else                     { fatalError("not supported") }
   }
+  
 }
 
 extension Int : PGDatumRepresentable {
-  var pgDatum : Datum {
+  
+  public var pgDatum : Datum {
     // TODO: check size and distinguish between 32&64 bit
     return Int64(self).pgDatum
   }
+  
 }
