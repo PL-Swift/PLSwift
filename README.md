@@ -17,7 +17,7 @@ in the
 [Swift](http://swift.org/)
 programming language.
 
-*Bringing Swift to the Backend of the Backend's Backend*
+<center>*Bringing Swift to the Backend of the Backend's Backend*</center>
 
 ### PL/Swift
 
@@ -31,10 +31,6 @@ This project/sourcedir contains the `swift-pl` tool,
 Xcode base configurations and module maps for the PostgreSQL server.
 
 
-TODO:
-- document what it is
-
-
 ### What is a PL/Swift Extension
 
 A dynamically loadable PostgreSQL extension module consists of those files:
@@ -44,30 +40,8 @@ A dynamically loadable PostgreSQL extension module consists of those files:
   (i.e. does the `CREATE FUNCTION`)
 - the actual ext.so shared library
 
-### How to use/load the extension
 
-That is very simple, just do a:
-
-```sql
-CREATE EXTENSION helloswift;
-```
-
-If you rebuild the extension and need to reload, you probably need to
-restart / reconnected
-`psql` and do a `DROP EXTENSION xyz` first.
-
-
-### PL/Swift Package
-
-A Swift API for PostgreSQL Server Extensions.
-This wraps the CPLSwift system package and
-provides Swift convenience on top of that.
-The package is part of the [PL/Swift](https://github.com/PL-Swift/) effort.
-
-Note: Very low level API.
-
-
-### Using the PLSwift package
+### Using the PL/Swift package
 
 *NOTE*: This *requires* a PL/Swift installation. W/o it, it will
         fail to built CPLSwift!
@@ -96,19 +70,32 @@ let package = Package(
 ```
 
 
-# Building an PLSwift module
+# Building a PL/Swift module
 
 Simply invoke
 
     swift pl build
 
 This wraps Swift Package Manager to build your package
-and then produce a proper module which can be loaded
+and then produces a proper module which can be loaded
 into PostgreSQL.
 
-To install the module into the local PostgreSQL, call
+To install the module into the local PostgreSQL, call:
 
     swift pl install
+
+
+### Use/load the extension
+
+That is very simple, just do a:
+
+```sql
+CREATE EXTENSION helloswift;
+```
+
+If you rebuild the extension and need to reload, you probably need to
+restart / reconnected
+`psql` and do a `DROP EXTENSION xyz` first.
 
 
 ### Status
@@ -119,6 +106,12 @@ Plans:
 
 - can we make it a real language module? i.e. embed Swift code in the
   SQL and compile it on demand? Why not, might be a bit heavy though.
+
+### Links
+
+- [mod_swift](http://mod-swift.org/), write Apache2 modules in Swift
+- [PostgreSQL Server Programming](https://www.postgresql.org/docs/current/static/server-programming.html)
+- [PostgreSQL C Language Functions](https://www.postgresql.org/docs/current/static/xfunc-c.html)
 
 ### Who
 
