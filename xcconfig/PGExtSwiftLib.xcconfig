@@ -1,0 +1,15 @@
+//
+// Copyright (C) 2018 ZeeZide GmbH, All Rights Reserved
+// Created by Helge Hess on 2018-01-05.
+//
+
+#include "/usr/local/lib/xcconfig/plswift.xcconfig"
+
+// Reuse the xcconfig intended for modules. Just override the stuff we need
+// to be different.
+DYLIB_INSTALL_NAME_BASE = /usr/local/lib/
+EXECUTABLE_EXTENSION    = dylib
+EXECUTABLE_PREFIX       = lib
+
+// SWIFT_VERSION = 4.0
+SWIFT_VERSION = 3.0
