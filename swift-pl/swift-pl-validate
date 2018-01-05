@@ -1,0 +1,169 @@
+#!/bin/bash
+#
+# swift-pl -- A SwiftPM extension to deal with building
+# PostgreSQL loadable modules
+#
+# Copyright 2017 ZeeZide GmbH. All rights reserved.
+#
+
+if [[ "x${SWIFT_PL_VALIDATED}" = "x" ]]; then
+SWIFT_PL_VALIDATED=yes
+
+# Check whether environment is sound. Also: setup common variables.
+#
+# Variables set:
+#   UNAME_S
+#   SRCROOT                  - if not set, $PWD
+#   MODULE_NAME              - e.g. mods_expressdemo
+#   BUILD_MAIN               - e.g. ".build"
+#   BUILD_ROOT               - e.g. ".build/debug" (TODO: diff to Xcode)
+#   BUILD_CONFIG             - release or debug
+#   BUILD_PRODUCT            - e.g. ".build/pgdemo.so"
+#   SPM_BUILD_CONFIG         - like CONFIGURATION, but always lowercase
+#   SWIFT_VERSION            - as emitted, e.g. 3.0.2 or 3.1
+#   SWIFT_MAJOR              - 3
+#   SWIFT_MINOR              - 1
+#   SWIFT_SUBMINOR_OPT       - empty or subminor if given (e.g. "" for 3.1)
+#   SWIFT_SUBMINOR           - subminor if given, else 0  (e.g. 0 for 3.1)
+#   PG_MODULE_DIR            - where the binary needs to be installed
+#   PG_EXTENSION_DIR         - where the SQL extensions are installed
+#   PL_SWIFT_PREFIX          - where PL/Swift is installed, e.g. /usr/local
+#   PG_CONTROL_FILE          - the control file of the ext (manifest)
+#   EXTENSION_VERSION        - version of the extension, e.g. 0.0.1
+#   PG_SETUP_FILE            - the SQL setup file of the ext
+# Also set if not set (as part of Xcode name migration)
+#   CONFIGURATION
+#   TARGET_NAME
+#   CONFIGURATION_BUILD_DIR
+#   FULL_PRODUCT_NAME
+#   BUILT_PRODUCTS_DIR
+#
+# TODO: rework to match Xcode names
+# - BUILD_MAIN => BUILD_ROOT
+# - BUILD_ROOT => CONFIGURATION_BUILD_DIR
+
+UNAME_S="`uname -s`"
+
+if [[ "x${SRCROOT}" = "x" ]]; then
+  SRCROOT="${PWD}"
+fi
+
+if ! hash pg_config 2>/dev/null; then
+  if [[ "${UNAME_S}" = "Darwin" ]]; then
+    echo 1>&2 "ERROR: Missing PostgreSQL pg_config."
+  else
+    echo 1>&2 "ERROR: Missing PostgreSQL pg_config, did you?:"
+    echo 1>&2 
+    echo 1>&2 "    apt-get install postgresql-server-dev ?"
+    echo 1>&2 
+  fi
+  exit 1
+fi
+
+# FIXME: all this is a little lame
+P="\${exec_prefix}" # a pattern as part of the path
+PG_MODULE_DIR="$(pg_config --pkglibdir)"
+PG_EXTENSION_DIR="$(pg_config --sharedir)/extension/"
+
+# check where the script lives, and then whether it has a module laying
+# beside it. Note: /usr/local w/ brew has no libexec!
+PL_SWIFT_PREFIX="$(dirname $(dirname "${BASH_SOURCE}"))"
+
+
+# detect module name
+
+if [[ "x${TARGET_NAME}" = "x" ]]; then
+  TARGET_NAME="`basename $PWD | tr "-" "_"`"
+fi
+if [[ "x${PRODUCT_NAME}" = "x" ]]; then
+  # TBD: is this correct? does it include an extension or sth?
+  PRODUCT_NAME="${TARGET_NAME}"
+fi
+if [[ "x${MODULE_NAME}" = "x" ]]; then
+  MODULE_NAME="${TARGET_NAME}" # TBD: use PRODUCT_NAME
+fi
+
+
+# Swift version
+
+SWIFT_VERSION="`swift --version | head -1 | sed 's/^.*[Vv]ersion[\t ]*\([.[:digit:]]*\).*$/\1/g'`"
+declare -a SWIFT_VERSION_LIST="(${SWIFT_VERSION//./ })"
+SWIFT_MAJOR=${SWIFT_VERSION_LIST[0]}
+SWIFT_MINOR=${SWIFT_VERSION_LIST[1]}
+SWIFT_SUBMINOR_OPT=${SWIFT_VERSION_LIST[2]}
+SWIFT_SUBMINOR=${SWIFT_SUBMINOR_OPT}
+if [[ "x${SWIFT_SUBMINOR}" = "x" ]]; then SWIFT_SUBMINOR=0; fi
+
+
+# do our work: parse arguments
+#   this is a little lame, because we require a single space ...
+
+if [[ "$ARGS" == *"-c release"* ]]; then
+  CONFIGURATION="release"
+elif [[ "$ARGS" == *"-configuration release"* ]]; then
+  CONFIGURATION="release"
+elif [[ "x${CONFIGURATION}" = "x" ]]; then
+  CONFIGURATION="debug"
+fi
+BUILD_CONFIG="${CONFIGURATION}"
+SPM_BUILD_CONFIG="`echo ${CONFIGURATION} | tr '[:upper:]' '[:lower:]'`"
+
+# TODO: different naming to Xcode, we override BUILD_ROOT below
+if [[ "x${BUILD_ROOT}" = "x" ]]; then
+  BUILD_MAIN=${PWD}/.build
+else
+  BUILD_MAIN="${BUILD_ROOT}"
+fi
+
+if [[ "x${CONFIGURATION_BUILD_DIR}" = "x" ]]; then
+  CONFIGURATION_BUILD_DIR="${BUILD_MAIN}/${BUILD_CONFIG}"
+fi
+BUILD_ROOT="${CONFIGURATION_BUILD_DIR}"
+
+if [[ "x${BUILT_PRODUCTS_DIR}" = "x" ]]; then
+  # Yes, we do not but this in the BUILD_CONFIG. TBD. Makes config easier.
+  # hh: config is now usually generated
+  BUILT_PRODUCTS_DIR="${BUILD_MAIN}"
+fi
+if [[ "x${FULL_PRODUCT_NAME}" = "x" ]]; then
+  FULL_PRODUCT_NAME="${MODULE_NAME}.so"
+fi
+BUILD_PRODUCT="${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}"
+
+
+PG_CONTROL_FILE="${MODULE_NAME}.control"
+
+if [[ -f "${PG_CONTROL_FILE}" ]]; then
+  EXTENSION_VERSION="$(grep default_version "${PG_CONTROL_FILE}" | head -n 1 | sed "s#default_version[ ]*[=][ ]'\([0-9.]*\)'*#\\1#g")"
+  if [[ "x${EXTENSION_VERSION}" != "x" ]]; then
+    PG_SETUP_FILE="${MODULE_NAME}--${EXTENSION_VERSION}.sql"
+  fi
+fi
+
+# Output configuration
+
+if ! [[ "x${EMBEDDED_VALIDATE}" = "xyes" ]]; then
+  echo "The Swift PostgreSQL build environment looks sound."
+  echo
+  echo "  srcroot:   ${SRCROOT}"
+  echo "  module:    ${MODULE_NAME}"
+  echo "  config:    ${BUILD_CONFIG}"
+  echo "  product:   ${BUILD_PRODUCT}"
+  echo "  version:   ${EXTENSION_VERSION}"
+  echo "  sql-setup: ${PG_SETUP_FILE}"
+  echo "  pg_config: $(which pg_config)"
+  echo "  moddir:    ${PG_MODULE_DIR}"
+  echo "  extdir:    ${PG_EXTENSION_DIR}"
+  echo "  PL/Swift:  ${PL_SWIFT_PREFIX}"
+  echo "  swift:     ${SWIFT_MAJOR}.${SWIFT_MINOR}.${SWIFT_SUBMINOR}"
+  echo
+  
+  if [[ ! -f "${PG_CONTROL_FILE}" ]]; then
+    echo 1>&2 "ERROR: Missing extension control file: ${PG_CONTROL_FILE}"
+  fi
+  if [[ ! -f "${PG_SETUP_FILE}" ]]; then
+    echo 1>&2 "ERROR: Missing setup file: ${PG_SETUP_FILE}"
+  fi
+fi
+
+fi # SWIFT_PL_VALIDATED

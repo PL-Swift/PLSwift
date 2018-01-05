@@ -9,6 +9,54 @@
 ![macOS](https://img.shields.io/badge/os-macOS-green.svg?style=flat)
 ![tuxOS](https://img.shields.io/badge/os-tuxOS-green.svg?style=flat)
 
+
+**PL/Swift** allows you to write custom SQL functions and types
+for the
+[PostgreSQL](https://www.postgresql.org) database server
+in the 
+[Swift](http://swift.org/)
+programming language.
+
+### PL/Swift
+
+Despite the name it is not (currently) a language extension like say
+[PL/Python](https://www.postgresql.org/docs/current/static/plpython.html),
+which allows you to directly embed Swift code in SQL.
+Instead it provides the infrastructure to create PostgreSQL
+dynamically loadable objects.
+
+This project/sourcedir contains the `swift-pl` tool,
+Xcode base configurations and module maps for the PostgreSQL server.
+
+
+TODO:
+- document what it is
+
+
+### What is a PL/Swift Extension
+
+A dynamically loadable PostgreSQL extension module consists of those files:
+
+- the ext.control file, specifies the name and version of the extension
+- the ext.sql file, hooks up the C function w/ PostgreSQL
+  (i.e. does the `CREATE FUNCTION`)
+- the actual ext.so shared library
+
+### How to use/load the extension
+
+That is very simple, just do a:
+
+```sql
+CREATE EXTENSION helloswift;
+```
+
+If you rebuild the extension and need to reload, you probably need to
+restart / reconnected
+`psql` and do a `DROP EXTENSION xyz` first.
+
+
+### PL/Swift Package
+
 A Swift API for PostgreSQL Server Extensions.
 This wraps the CPLSwift system package and
 provides Swift convenience on top of that.
@@ -56,6 +104,19 @@ This wraps Swift Package Manager to build your package
 and then produce a proper module which can be loaded
 into PostgreSQL.
 
+To install the module into the local PostgreSQL, call
+
+    swift pl install
+
+
+### Status
+
+Consider this a demo. Though it should work just fine.
+
+Plans:
+
+- can we make it a real language module? i.e. embed Swift code in the
+  SQL and compile it on demand? Why not, might be a bit heavy though.
 
 ### Who
 

@@ -1,0 +1,171 @@
+#!/bin/bash
+#
+# swift-pl -- A SwiftPM extension to deal with building
+# PostgreSQL loadable modules
+#
+# Copyright 2017 ZeeZide GmbH. All rights reserved.
+#
+
+ARGS="$@"
+
+EMBEDDED_VALIDATE=yes . swift-pl-validate
+rc=$?; if [ $rc -ne 0 ]; then exit $rc; fi
+
+PACKAGE_VERSION="0.0.1"
+
+# templates
+
+read -r -d '' PACKAGE_TEMPLATE <<EOF
+// swift-tools-version:3.1
+
+import PackageDescription
+
+let package = Package(
+    name: "%MODULE_NAME%",
+
+    dependencies: [
+      .Package(url: "https://github.com/PL-Swift/PLSwift.git", 
+               majorVersion: 0)
+    ]
+)
+EOF
+
+
+read -r -d '' EXTENSION_CONTROL_FILE <<EOF
+# %MODULE_NAME% extension
+comment         = '%MODULE_NAME% PL/Swift Extension'
+default_version = '${PACKAGE_VERSION}'
+relocatable     = true
+EOF
+
+
+read -r -d '' EXTENSION_LOAD_FILE <<EOF
+-- complain if script is sourced in psql, rather than via CREATE EXTENSION
+\echo Use "CREATE EXTENSION %MODULE_NAME%" to load this file. \quit
+
+CREATE FUNCTION %MODULE_NAME%_hello() RETURNS text
+    AS '\$libdir/%MODULE_NAME%'
+    LANGUAGE C IMMUTABLE STRICT;
+EOF
+
+
+read -r -d '' SWIFT_SOURCE_FILE <<EOF
+// PostgreSQL on the ZeeZide
+
+import Foundation
+
+func hello() -> String {
+  return "Hello Schwifty World!"
+}
+EOF
+
+
+# TBD: can we create this from the Swift sources prior calling `swift pl build`
+read -r -d '' SWIFT_BOILERPLATE_FILE <<EOF
+// PostgreSQL on the ZeeZide
+//
+// This is the file which contains all the registration functions required by
+// PostgreSQL. It is a little messy, but hey! :-)
+
+import Foundation
+import CPLSwift
+import PLSwift
+
+// MARK: - Hello Function Declaration
+
+/*
+ * To add more functions, you need to:
+ * - add a main \`func xyz(fcinfo: FunctionCallInfo) -> Datum\`
+ * - add a mandatory ABI function (just returns PG_FUNCTION_INFO_V1)
+ * - load the function in the %MODULE_NAME%.sql file
+ *
+ * The functions need proper "C names", so that PostgreSQL can find them. The
+ * names are assigned using the \`@_cdecl\` attribute.
+ */
+
+@_cdecl("pg_finfo_%MODULE_NAME%_hello")
+public func hello_abi() -> UnsafeRawPointer {
+  return PG_FUNCTION_INFO_V1
+}
+
+@_cdecl("%MODULE_NAME%_hello")
+public func hello(fcinfo: FunctionCallInfo) -> Datum {
+  return hello().pgDatum
+}
+
+// MARK: - PostgreSQL Extension Marker
+
+@_cdecl("Pg_magic_func") public func PG_MAGIC_BLOCK() -> UnsafeRawPointer {
+  return PGExtensionMagicStruct
+}
+EOF
+
+read -r -d '' GIT_IGNORE <<EOF
+.DS_Store
+
+## Build generated
+build
+DerivedData
+
+## Other
+*.moved-aside
+*.xcuserstate
+
+## Obj-C/Swift specific
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+Packages
+EOF
+
+
+# setup
+
+if ! test -f .gitignore; then
+  echo "${GIT_IGNORE}" > .gitignore
+fi
+
+if ! test -d Sources; then
+  mkdir Sources
+  echo "${SWIFT_SOURCE_FILE}" \
+    | sed "s#%MODULE_NAME%#${MODULE_NAME}#g"   \
+    > "Sources/${MODULE_NAME}.swift"
+  echo "${SWIFT_BOILERPLATE_FILE}" \
+    | sed "s#%MODULE_NAME%#${MODULE_NAME}#g"   \
+    > "Sources/${MODULE_NAME}-ext.swift"
+else
+  echo "Sources already setup, not generating."
+fi
+
+if ! test -f Package.swift; then
+  echo "${PACKAGE_TEMPLATE}" \
+    | sed "s#%MODULE_NAME%#${MODULE_NAME}#g"   \
+    > "Package.swift"
+fi
+
+if ! test -f "${MODULE_NAME}.control"; then
+  echo "${EXTENSION_CONTROL_FILE}" \
+    | sed "s#%MODULE_NAME%#${MODULE_NAME}#g"   \
+    > "${MODULE_NAME}.control"
+fi
+if ! test -f "${MODULE_NAME}--${PACKAGE_VERSION}.sql"; then
+  echo "${EXTENSION_LOAD_FILE}" \
+    | sed "s#%MODULE_NAME%#${MODULE_NAME}#g"   \
+    > "${MODULE_NAME}--${PACKAGE_VERSION}.sql"
+fi
+
+
+# debug
+
+echo "The Swift PostgreSQL build environment looks sound."
+echo
+echo "  module:    ${MODULE_NAME}"
+echo "  config:    ${CONFIGURATION}"
+echo "  product:   ${BUILD_PRODUCT}"
+echo "  pg_config: $(which pg_config)"
+echo "  PL/Swift:  ${PL_SWIFT_PREFIX}"
+echo

@@ -1,0 +1,147 @@
+#!/bin/bash
+
+# ******************** variables ****************
+
+CFG_ARGS="$0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
+
+ARG_BEQUIET=0
+ARG_PREFIX=""
+ARG_CFGMAKE="$PWD/config.make"
+ARG_WITH_DEBUG=1
+ARG_WITH_STRIP=1
+ARG_WITH_PGCONFIG=1
+ARG_PGCONFIG="NOTSET"
+
+# ******************** usage ********************
+
+function usage() {
+  cat <<_ACEOF
+\`configure' configures PL/Swift.
+
+Usage: $0 [OPTION]...
+
+Configuration:
+  -h, --help              display this help and exit
+  -q, --quiet, --silent   do not print \`checking...' messages
+
+Installation directories:
+  --prefix=PREFIX	  install files in PREFIX [/usr/local]
+  --enable-debug          turn on debugging and compile time warnings
+  --enable-strip          turn on stripping of debug symbols
+  --with-pgconfig=PATH	  location of pg_config [which pg_config]
+
+_ACEOF
+
+  exit 0;
+}
+
+# ******************** running ********************
+
+function cfgwrite() {
+  echo "$1" >> $ARG_CFGMAKE
+}
+
+function genConfigMake() {
+  if [[ $ARG_BEQUIET != 1 ]]; then
+    echo "creating: $ARG_CFGMAKE"
+  fi
+  
+  echo "# PL/Swift configuration" > $ARG_CFGMAKE
+  cfgwrite "#   created by: '$CFG_ARGS'"
+  cfgwrite ""
+  cfgwrite "# Note: you can override any option as a 'make' parameter, eg:"
+  cfgwrite "#         make debug=yes"
+  cfgwrite ""
+
+  if [[ $ARG_WITH_DEBUG = 1 ]]; then
+    cfgwrite "# configured to produce debugging code";
+    cfgwrite "debug:=yes"
+  else
+    cfgwrite "# configured to produce non-debugging code";
+    cfgwrite "debug:=no"
+  fi
+  cfgwrite ""
+  
+  if [[ $ARG_WITH_STRIP = 1 ]]; then
+    cfgwrite "# configured to produce stripped code";
+    cfgwrite "strip:=yes"
+  else
+    cfgwrite "# configured not to strip code";
+    cfgwrite "strip:=no"
+  fi
+  cfgwrite ""
+
+  cfgwrite "# enforce shared libraries";
+  cfgwrite "shared:=yes"
+  cfgwrite ""
+
+  if [ -n "${ARG_PGCONFIG}" ]; then
+    cfgwrite "PG_CONFIG:=${ARG_PGCONFIG}"
+    cfgwrite ""
+  fi
+
+  if [ -n "$ARG_PREFIX" ]; then
+    cfgwrite "prefix:=${ARG_PREFIX}"
+    cfgwrite ""
+  fi
+}
+
+function runIt() {
+  if [[ "${ARG_PGCONFIG}" = "NOTSET" ]]; then
+    ARG_PGCONFIG="`which pg_config`";
+  fi
+  if [ -z "$ARG_PREFIX" ]; then
+    ARG_PREFIX=/usr/local
+  fi
+	
+  genConfigMake;
+}
+
+# ******************** options ********************
+
+function extractFuncValue() {
+  VALUE="`echo "$1" | sed "s/[^=]*=//g"`"
+}
+
+function processOption() {
+  case "x$1" in
+    "x--help"|"x-h")
+        usage;
+        ;;
+    "x--quiet"|"x--silent"|"x-q") ARG_BEQUIET=1;  ;;
+    x--prefix=*)
+        extractFuncValue $1;
+        ARG_PREFIX="$VALUE";
+        ;;
+    x--with-pgconfig=*)
+        extractFuncValue $1;
+        ARG_PGCONFIG="$VALUE";
+        ;;
+    "x--with-pgconfig")
+        ARG_PGCONFIG="`which pg_config`";
+        ;;
+    "x--without-pgconfig")
+        ARG_PGCONFIG="";
+        ;;
+    "x--enable-debug")
+        ARG_WITH_DEBUG=1
+        ;;
+    "x--disable-debug")
+        ARG_WITH_DEBUG=0
+        ;;
+    "x--enable-strip")
+        ARG_WITH_STRIP=1
+        ;;
+    "x--disable-strip")
+        ARG_WITH_STRIP=0
+        ;;
+
+    *) echo "error: cannot process argument: $1"; exit 1; ;;
+  esac
+}
+
+for i in $@; do
+  processOption $i;
+done
+
+runIt

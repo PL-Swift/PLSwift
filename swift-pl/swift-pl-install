@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# swift-pl -- A SwiftPM extension to deal with building
+# PostgreSQL loadable modules
+#
+# Copyright 2017 ZeeZide GmbH. All rights reserved.
+#
+
+ARGS="$@"
+
+EMBEDDED_VALIDATE=yes . swift-pl-validate
+
+
+# check whether the module has been built, otherwise call build
+# TBD: Always rebuild?
+
+if ! test -x "${BUILD_PRODUCT}"; then
+  # FIXME: only pass over build flags (just -c/--configuration?)
+  if [[ "x$CONFIGURATION" = "xrelease" ]]; then
+    swift apache build -c release
+  else
+    swift apache build -c debug
+  fi
+  rc=$?; if [ $rc -ne 0 ]; then exit $rc; fi
+fi
+
+if ! test -x "${BUILD_PRODUCT}"; then
+  echo 1>&2 "ERROR: can't find built product: ${BUILD_PRODUCT}"
+  exit 10
+fi
+
+
+if [[ ! -f "${PG_CONTROL_FILE}" ]]; then
+  echo 1>&2 "ERROR: Missing extension control file: ${PG_CONTROL_FILE}"
+  exit 22
+fi
+if [[ ! -f "${PG_SETUP_FILE}" ]]; then
+  echo 1>&2 "ERROR: Missing setup file: ${PG_SETUP_FILE}"
+  exit 23
+fi
+
+
+cp "${BUILD_PRODUCT}"   "${PG_MODULE_DIR}/"
+cp "${PG_CONTROL_FILE}" "${PG_EXTENSION_DIR}"
+cp "${PG_SETUP_FILE}"   "${PG_EXTENSION_DIR}"

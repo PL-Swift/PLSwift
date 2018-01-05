@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# swift-pl -- A SwiftPM extension to deal with building
+# PostgreSQL loadable modules
+#
+# Copyright 2017 ZeeZide GmbH. All rights reserved.
+#
+
+# `swift pl clean` is just here to mirror the `swift package clean` 
+# introduced in Swift 3.1 (which deprecated `swift build --clean`)
+
+# TBD: not sure what flags `swift package clean` supports, the --help doesn't
+#      say anything :-)
+swift-pl-build --clean $@

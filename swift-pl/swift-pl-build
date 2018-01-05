@@ -1,0 +1,131 @@
+#!/bin/bash
+#
+# swift-pl -- A SwiftPM extension to deal with building
+# PostgreSQL loadable modules
+#
+# Copyright 2017 ZeeZide GmbH. All rights reserved.
+#
+
+ARGS="$@"
+
+
+# check whether environment is sound, also parse some args
+
+EMBEDDED_VALIDATE=yes . swift-pl-validate
+rc=$?; if [ $rc -ne 0 ]; then exit $rc; fi
+
+
+# TODO: debug vs non-debug
+# TODO: derive platform and such
+# TODO: select targets using json output
+#         swift package show-dependencies --format=json
+
+# TODO: Flags of swift build we want to support:
+# -c      debug|release [debug]
+# --clean build|dist    [build]   - we need to rm the .so/.so.dSYM
+# --color auto|always|never [auto]
+# -v or --verbose
+
+
+# usage
+
+usage() {
+	echo "usage: swift pl build [mode] [options]"
+  echo
+  echo "Modes:"
+  echo "  -c, --configuration debug|release [default: debug]"
+  echo "  --clean build|dist                [default: build]"
+  echo
+  echo "Options:"
+  echo "  --color auto|always|never         [default: auto]"
+  echo "  -v, --verbose"
+}
+
+if [[ "$ARGS" == *"--help"* ]]; then
+  usage
+  exit 0
+fi
+
+
+# check whether we are in clean mode
+
+if [[ "$ARGS" == *"--clean"* ]]; then
+  if [[ "$ARGS" == *"--clean dist"* ]]; then
+    CLEAN_MODE=dist
+  elif [[ "$ARGS" == *"--clean build"* ]]; then
+    CLEAN_MODE=build
+  else
+    CLEAN_MODE=build
+  fi
+fi
+
+if [ -n "${CLEAN_MODE}" ]; then
+  # invoke SPM clean
+  if [[ ${SWIFT_MAJOR} -gt 3 || ${SWIFT_MINOR} -gt 0 ]]; then
+    SWIFT_CLEAN="swift package clean"
+  else
+    SWIFT_CLEAN="swift build --clean ${CLEAN_MODE}"
+  fi
+  
+  ${SWIFT_CLEAN} # $ARGS - needs cleanup
+  rc=$?; if [ $rc -ne 0 ]; then exit $rc; fi
+  
+  rm -rf "${BUILD_PRODUCT}" "${BUILD_PRODUCT}.dSYM"
+  exit 0
+fi
+
+
+# invoke SPM build
+
+swift build $@
+rc=$?; if [ $rc -ne 0 ]; then exit $rc; fi
+
+
+# do our work: config
+
+if ! test "xBUILD_CONFIG" = "xrelease"; then
+  CFLAGS="${CFLAGS} -g"
+fi
+
+
+
+# platform stuff
+
+if [[ "${UNAME_S}" = "Darwin" ]]; then
+  SWIFTC=`xcrun --toolchain swift-latest -f swiftc`
+  
+  # required on macOS 10.11 w/ Xcode 8.2.1 (else Swift does 10.9?)
+  TARGET_VERSION="10.10" 
+  DEPLOYMENT_TARGET="x86_64-apple-macosx${TARGET_VERSION}"
+  if [ -n "${DEPLOYMENT_TARGET}" ]; then
+    PLATFORM_FLAGS="${PLATFORM_FLAGS} -target ${DEPLOYMENT_TARGET}"
+  fi
+  
+  SDK="`xcrun -sdk macosx --show-sdk-path`"
+  if [ -n "${SDK}" ]; then
+    PLATFORM_FLAGS="${PLATFORM_FLAGS} -sdk $SDK"
+  fi
+  
+  PLATFORM_FLAGS="${PLATFORM_FLAGS} -Xlinker -undefined -Xlinker dynamic_lookup"
+  
+  # TBD:
+  #  -rpath $(TOOLCHAIN_DIR)/usr/lib/swift/macosx -rpath $(MODSWIFT_TARGET_DIR)
+  # TBD: -lswiftFoundation -lswiftDarwin -lswiftCore
+else
+  SWIFTC="$(which swiftc)"
+fi
+
+
+# Invoke Swift to link the shared object
+
+FILES_TO_LINK="`find ${CONFIGURATION_BUILD_DIR}/ -name *.o`"
+
+${SWIFTC} \
+  -emit-library \
+  -emit-module -module-name "${MODULE_NAME}" \
+  $PLATFORM_FLAGS \
+  $CFLAGS \
+  -L${CONFIGURATION_BUILD_DIR} \
+  `pkg-config --libs plswift` \
+  -o "${BUILD_PRODUCT}" \
+  ${FILES_TO_LINK}

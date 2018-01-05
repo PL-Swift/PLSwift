@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# swift-pl -- A SwiftPM extension to deal with building
+# PostgreSQL loadable modules.
+#
+# Copyright 2017 ZeeZide GmbH. All rights reserved.
+#
+
+if [ "$DEBUG" = "yes" ]; then
+  set -x
+fi
+
+export SWIFT_PL_DIR=$(dirname "$0")
+
+usage() {
+  echo "usage: swift pl <subcommand>"
+  echo
+  echo "Available subcommands are:"
+  echo "   init      Setup directory as a Swift PostgreSQL Package."
+  echo "   build     Build Swift Package as a PostgreSQL loadable module."
+  echo "   install   Install module into PostgreSQL server."
+  echo "   validate  Check PostgreSQL build environment."
+  echo
+  echo "Try 'swift pl <subcommand> help' for details."
+}
+
+main() {
+  if [ $# -lt 1 ]; then
+    usage
+    exit 1
+  fi
+
+  # sanity checks
+  SUBCOMMAND="$1"; shift
+  
+  if [[ -x "${SWIFT_PL_DIR}/swift-pl-$SUBCOMMAND" ]]; then
+    RUNCMD="${SWIFT_PL_DIR}/swift-pl-$SUBCOMMAND"
+  else
+    THECMD="`ls ${SWIFT_PL_DIR}/swift-pl-${SUBCOMMAND}* | head -n 1`"
+    if [[ -x "${THECMD}" ]]; then
+      RUNCMD="${THECMD}"
+    else
+      echo "Unknown subcommand: '$SUBCOMMAND'"
+      echo
+      usage
+      exit 1
+    fi
+  fi
+
+  # run command
+  . "${RUNCMD}"
+}
+
+main "$@"
