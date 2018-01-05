@@ -17,6 +17,8 @@ in the
 [Swift](http://swift.org/)
 programming language.
 
+*Bringing Swift to the Backend of the Backend's Backend*
+
 ### PL/Swift
 
 Despite the name it is not (currently) a language extension like say
