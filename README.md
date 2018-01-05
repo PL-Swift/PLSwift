@@ -12,9 +12,9 @@
 A Swift API for PostgreSQL Server Extensions.
 This wraps the CPLSwift system package and
 provides Swift convenience on top of that.
-This package is part of the [PL/Swift](https://github.com/PL-Swift/) effort.
+The package is part of the [PL/Swift](https://github.com/PL-Swift/) effort.
 
-All this is a very low level API.
+Note: Very low level API.
 
 
 ### Using the PLSwift package
