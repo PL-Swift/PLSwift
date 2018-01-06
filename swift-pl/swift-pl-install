@@ -17,9 +17,9 @@ EMBEDDED_VALIDATE=yes . swift-pl-validate
 if ! test -x "${BUILD_PRODUCT}"; then
   # FIXME: only pass over build flags (just -c/--configuration?)
   if [[ "x$CONFIGURATION" = "xrelease" ]]; then
-    swift apache build -c release
+    swift pl build -c release
   else
-    swift apache build -c debug
+    swift pl build -c debug
   fi
   rc=$?; if [ $rc -ne 0 ]; then exit $rc; fi
 fi

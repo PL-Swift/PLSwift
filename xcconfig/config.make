@@ -88,7 +88,6 @@ endif
 # We have set prefix above, or we got it via ./config.make
 # Now we need to derive:
 # - BINARY_INSTALL_DIR            e.g. /usr/local/bin
-# - APACHE_MODULE_INSTALL_DIR
 # - HEADER_FILES_INSTALL_DIR      e.g. /usr/local/include
 # - PKGCONFIG_INSTALL_DIR         e.g. /usr/local/lib/pkgconfig
 # - XCCONFIG_INSTALL_DIR          e.g. /usr/local/lib/xcconfig
@@ -97,21 +96,6 @@ endif
 
 ifeq ($(BINARY_INSTALL_DIR),)
   BINARY_INSTALL_DIR=$(prefix)/bin
-endif
-
-ifeq ($(APACHE_MODULE_INSTALL_DIR),)
-  ifeq ($(USE_PG_CONFIG),yes)
-    APACHE_MODULE_RELDIR3=$(shell apxs -q | grep ^libexecdir | sed "s/libexecdir=.*}//g" | sed "sTlibexecdir=$(prefix)TTg" | sed "s/libexecdir=//g" )
-    APACHE_MODULE_RELDIR2=$(subst /usr/local,,$(APACHE_MODULE_RELDIR3))
-    APACHE_MODULE_RELDIR=$(subst /usr,,$(APACHE_MODULE_RELDIR2))
-    APACHE_MODULE_INSTALL_DIR=${prefix}/${APACHE_MODULE_RELDIR}
-  else
-    ifeq ($(UNAME_S),Darwin)
-      APACHE_MODULE_INSTALL_DIR="$(prefix)/libexec/apache2"
-    else # Linux: this may be different depending on the distro
-      APACHE_MODULE_INSTALL_DIR="$(prefix)/lib/apache2/modules"
-    endif
-  endif
 endif
 
 ifeq ($(HEADER_FILES_INSTALL_DIR),)
