@@ -90,8 +90,27 @@ function runIt() {
   if [[ "${ARG_PGCONFIG}" = "NOTSET" ]]; then
     ARG_PGCONFIG="`which pg_config`";
   fi
+  if [[ -z "${ARG_PGCONFIG}" ]]; then
+    if [[ -x "/usr/local/bin/pg_config" ]]; then
+      ARG_PGCONFIG="/usr/local/bin/pg_config"
+      echo "Using pg_config found here: ${ARG_PGCONFIG}"
+    elif [[ -d "/Applications/Postgres.app/Contents/Versions" ]]; then
+      # this is a little well
+      LATEST_VER="$(ls /Applications/Postgres.app/Contents/Versions | sort -r | head -n 1)"
+      if [[ -x "/Applications/Postgres.app/Contents/Versions/${LATEST_VER}/bin/pg_config" ]]; then
+        ARG_PGCONFIG="/Applications/Postgres.app/Contents/Versions/${LATEST_VER}/bin/pg_config"
+        echo "Using pg_config from PostgreSQL.app: ${ARG_PGCONFIG}"
+      fi
+    fi
+  fi
+  
   if [ -z "$ARG_PREFIX" ]; then
     ARG_PREFIX=/usr/local
+  fi
+
+  if [[ ! -x "${ARG_PGCONFIG}" ]]; then
+    echo >&2 "Could not locate pg_config! ${ARG_PGCONFIG}"
+    exit 42;
   fi
 	
   genConfigMake;
