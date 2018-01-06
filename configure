@@ -91,6 +91,11 @@ function runIt() {
     ARG_PGCONFIG="`which pg_config`";
   fi
   if [[ -z "${ARG_PGCONFIG}" ]]; then
+    # we want to pickup from the users PATH to work "properly" within
+    # homebrew (which patches the path)
+    ARG_PGCONFIG="$(bash -l -c "which pg_config")"
+  fi
+  if [[ -z "${ARG_PGCONFIG}" ]]; then
     if [[ -x "/usr/local/bin/pg_config" ]]; then
       ARG_PGCONFIG="/usr/local/bin/pg_config"
       echo "Using pg_config found here: ${ARG_PGCONFIG}"
