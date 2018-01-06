@@ -84,4 +84,5 @@ Release
 /.build
 /Packages
 Package.resolved
+config.make
 
