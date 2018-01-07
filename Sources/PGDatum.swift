@@ -45,9 +45,10 @@ public protocol PGDatumRepresentable {
 
 extension String : PGDatumRepresentable {
   public var pgDatum : Datum {
-    // UnsafeMutablePointer<text>?
-    let txt = cstring_to_text(self)
-    
+    // does this avoid the alloc? maybe.
+    let txt = withCString { cstr in
+      return cstring_to_text(cstr)
+    }
     // cast to Datum
     return PG_RETURN_TEXT_P(txt)
   }
