@@ -17,7 +17,10 @@ in the
 [Swift](http://swift.org/)
 programming language.
 
-<center>*Bringing Swift to the Backend of the Backend's Backend*</center>
+<center><i>Bringing Swift to the Backend of the Backend's Backend</i></center>
+
+A small tutorial can be found over here:
+[PL/Swift - PostgreSQL Functions in Swift](http://www.alwaysrightinstitute.com/plswift/).
 
 ### PL/Swift
 
