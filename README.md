@@ -122,3 +122,26 @@ Plans:
 [ZeeZide](http://zeezide.de).
 We like feedback, GitHub stars, cool contract work,
 presumably any form of praise you can think of.
+
+<table width="100%" border="0">
+    <tr style="width: 100%;">
+      <td align="center" width="33%">
+        <a href="http://apacheexpress.io"
+          ><img src="http://zeezide.com/img/ApexIcon128.png" width="64" height="64" /></a>
+	<br />
+	ApacheExpress
+      </td>
+      <td align="center" width="33%">
+        <a href="http://mod-swift.org"
+          ><img src="http://zeezide.com/img/mod_swift-128x128.png" width="64" height="64" /></a>
+	<br />
+	mod_swift
+      </td>
+      <td align="center" width="33%">
+        <a href="http://zeeql.io"
+          ><img src="http://zeezide.com/img/ZeeQLIconQL128.png" width="64" height="64" /></a>
+	<br />
+	ZeeQL
+      </td>
+    </tr>
+</table>
