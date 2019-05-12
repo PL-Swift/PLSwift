@@ -25,7 +25,7 @@ let package = Package(
 
     dependencies: [
       .Package(url: "https://github.com/PL-Swift/PLSwift.git", 
-               majorVersion: 0)
+               majorVersion: 0, minorVersion: 3)
     ]
 )
 EOF
