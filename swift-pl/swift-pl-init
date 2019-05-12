@@ -15,6 +15,29 @@ PACKAGE_VERSION="0.0.1"
 
 # templates
 
+if [[ ${SWIFT_MAJOR} -gt 4 || ${SWIFT_MINOR} -gt 2 ]]; then
+read -r -d '' PACKAGE_TEMPLATE <<EOF
+// swift-tools-version:${SWIFT_TOOLS_VERSION}
+
+import PackageDescription
+
+let package = Package(
+    name: "%MODULE_NAME%",
+    
+    products: [
+      .library(name: "%MODULE_NAME%", targets: [ "%MODULE_NAME%" ]),
+    ],
+    
+    dependencies: [
+      .package(url: "https://github.com/PL-Swift/PLSwift.git", from: "0.5.0")
+    ],
+    
+    targets: [
+      .target(name: "%MODULE_NAME%", dependencies: [ "CPLSwift", "PLSwift" ])
+    ]    
+)
+EOF
+else # Swift 3 and 4.0
 read -r -d '' PACKAGE_TEMPLATE <<EOF
 // swift-tools-version:3.1
 
@@ -25,10 +48,11 @@ let package = Package(
 
     dependencies: [
       .Package(url: "https://github.com/PL-Swift/PLSwift.git", 
-               majorVersion: 0)
+               majorVersion: 0, minorVersion: 3)
     ]
 )
 EOF
+fi
 
 
 read -r -d '' EXTENSION_CONTROL_FILE <<EOF
@@ -129,14 +153,14 @@ if ! test -f .gitignore; then
   echo "${GIT_IGNORE}" > .gitignore
 fi
 
-if ! test -d Sources; then
-  mkdir Sources
+if ! test -d Sources/${MODULE_NAME}; then
+  mkdir -p Sources/${MODULE_NAME}
   echo "${SWIFT_SOURCE_FILE}" \
     | sed "s#%MODULE_NAME%#${MODULE_NAME}#g"   \
-    > "Sources/${MODULE_NAME}.swift"
+    > "Sources/${MODULE_NAME}/${MODULE_NAME}.swift"
   echo "${SWIFT_BOILERPLATE_FILE}" \
     | sed "s#%MODULE_NAME%#${MODULE_NAME}#g"   \
-    > "Sources/${MODULE_NAME}-ext.swift"
+    > "Sources/${MODULE_NAME}/${MODULE_NAME}-ext.swift"
 else
   echo "Sources already setup, not generating."
 fi
@@ -153,6 +177,7 @@ if ! test -f "${MODULE_NAME}.control"; then
     > "${MODULE_NAME}.control"
 fi
 if ! test -f "${MODULE_NAME}--${PACKAGE_VERSION}.sql"; then
+  # Note: the `--` seems to be right/required.
   echo "${EXTENSION_LOAD_FILE}" \
     | sed "s#%MODULE_NAME%#${MODULE_NAME}#g"   \
     > "${MODULE_NAME}--${PACKAGE_VERSION}.sql"

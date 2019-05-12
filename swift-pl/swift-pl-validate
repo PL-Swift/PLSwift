@@ -25,6 +25,7 @@ SWIFT_PL_VALIDATED=yes
 #   SWIFT_MINOR              - 1
 #   SWIFT_SUBMINOR_OPT       - empty or subminor if given (e.g. "" for 3.1)
 #   SWIFT_SUBMINOR           - subminor if given, else 0  (e.g. 0 for 3.1)
+#   SWIFT_TOOLS_VERSION      - 4.2
 #   PG_MODULE_DIR            - where the binary needs to be installed
 #   PG_EXTENSION_DIR         - where the SQL extensions are installed
 #   PL_SWIFT_PREFIX          - where PL/Swift is installed, e.g. /usr/local
@@ -94,6 +95,7 @@ SWIFT_SUBMINOR_OPT=${SWIFT_VERSION_LIST[2]}
 SWIFT_SUBMINOR=${SWIFT_SUBMINOR_OPT}
 if [[ "x${SWIFT_SUBMINOR}" = "x" ]]; then SWIFT_SUBMINOR=0; fi
 
+SWIFT_TOOLS_VERSION="${SWIFT_MAJOR}.${SWIFT_MINOR}"
 
 # do our work: parse arguments
 #   this is a little lame, because we require a single space ...
@@ -156,6 +158,7 @@ if ! [[ "x${EMBEDDED_VALIDATE}" = "xyes" ]]; then
   echo "  extdir:    ${PG_EXTENSION_DIR}"
   echo "  PL/Swift:  ${PL_SWIFT_PREFIX}"
   echo "  swift:     ${SWIFT_MAJOR}.${SWIFT_MINOR}.${SWIFT_SUBMINOR}"
+  echo "  tools:     ${SWIFT_TOOLS_VERSION}"
   echo
   
   if [[ ! -f "${PG_CONTROL_FILE}" ]]; then
