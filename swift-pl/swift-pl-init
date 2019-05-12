@@ -29,7 +29,8 @@ let package = Package(
     ],
     
     dependencies: [
-      .package(url: "https://github.com/PL-Swift/PLSwift.git", from: "0.5.0")
+      .package(url: "https://github.com/PL-Swift/CPLSwift.git", from: "1.0.0"),
+      .package(url: "https://github.com/PL-Swift/PLSwift.git",  from: "0.5.0")
     ],
     
     targets: [
