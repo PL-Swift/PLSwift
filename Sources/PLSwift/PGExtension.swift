@@ -3,7 +3,7 @@
 //  PL/Swift
 //
 //  Created by Helge Hess on 05.01.18.
-//  Copyright © 2018 ZeeZide GmbH. All rights reserved.
+//  Copyright © 2018-2019 ZeeZide GmbH. All rights reserved.
 //
 
 import CPLSwift

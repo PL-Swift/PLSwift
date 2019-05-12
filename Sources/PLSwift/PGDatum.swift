@@ -3,7 +3,7 @@
 //  PL/Swift
 //
 //  Created by Helge Hess on 05.01.18.
-//  Copyright © 2018 ZeeZide GmbH. All rights reserved.
+//  Copyright © 2018-2019 ZeeZide GmbH. All rights reserved.
 //
 
 import CPLSwift
@@ -26,7 +26,7 @@ public let PG_RETURN_TEXT_P  = PG_RETURN_POINTER
 
 public extension Datum {
   
-  public var int64Value : Int64 {
+  var int64Value : Int64 {
     /*
      #define DatumGetInt32(X) ((int32) GET_4_BYTES(X))
      #define GET_4_BYTES(datum)  (((Datum) (datum)) & 0xffffffff)
@@ -34,7 +34,7 @@ public extension Datum {
     return Int64(bitPattern: UInt64(self))
   }
   
-  public var intValue : Int {
+  var intValue : Int {
     return Int(int64Value)
   }
 }
