@@ -6,6 +6,7 @@
 ![PostgreSQL](https://img.shields.io/badge/postgresql-10-yellow.svg)
 ![Swift3](https://img.shields.io/badge/swift-3-blue.svg)
 ![Swift4](https://img.shields.io/badge/swift-4-blue.svg)
+![Swift5](https://img.shields.io/badge/swift-5-blue.svg)
 ![macOS](https://img.shields.io/badge/os-macOS-green.svg?style=flat)
 ![tuxOS](https://img.shields.io/badge/os-tuxOS-green.svg?style=flat)
 
@@ -67,10 +68,13 @@ let package = Package(
   name: "MyTool",
 
   dependencies: [
-    .Package(url: "git@github.com:PL-Swift/PLSwift.git", majorVersion: 0),
+    .Package(url: "git@github.com:PL-Swift/PLSwift.git", from: "0.5.0"),
   ]
 )
 ```
+
+Note: If you are using Swift older than 4.2, you need to use the `swift3`
+branch (`0.3.0` version tag).
 
 
 # Building a PL/Swift module
