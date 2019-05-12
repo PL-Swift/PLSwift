@@ -5,6 +5,6 @@ let package = Package(
 
     dependencies: [
       .Package(url: "https://github.com/PL-Swift/CPLSwift.git", 
-               majorVersion: 0, minor: 0)
+               majorVersion: 0, minor: 3)
     ]
 )
